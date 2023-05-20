@@ -1,18 +1,10 @@
-﻿using System;
-using System.Collections;
-using Realms;
+﻿using Realms;
 using osu.Game.Beatmaps;
-using osu.Game.Models;
 using osu.Game.Rulesets;
-using System.Linq;
 using osu.Game.Extensions;
-using System.IO;
-using System.Runtime.CompilerServices;
-using NUnit.Framework.Internal;
-using Vortice.Win32;
 
 #nullable enable
-namespace TestHasher
+namespace Extractor
 {
     public static class Tools
     {
@@ -158,10 +150,9 @@ namespace TestHasher
             return dir;
         }
 
-        static void ExportAudios(string src,string dest, LimitedBeatmapInfo[] to_export)
+        static void ExportAudios(string src,string dest, LimitedBeatmapInfo[] to_export,int max=200)
         {
             int counter = 0;
-            const int max = 200;
             string dest_dir = GetExportDir(dest);
             foreach(LimitedBeatmapInfo f in to_export)
             {
@@ -177,7 +168,14 @@ namespace TestHasher
 
         static void Main()
         {
-            RealmConfiguration config = new("E:\\Projects\\OsuAudioExtractor\\client.realm")
+            const string output = "E:\\osu songs";
+            const string osu_data_dir = "E:\\Program files (emergency)\\osu!lazer";
+            const string osu_file_dir = osu_data_dir + "\\files";
+            const string osu_realm = osu_data_dir + "\\client.realm";
+            const int max_dir_content = 200;
+
+
+            RealmConfiguration config = new(osu_realm)
             {
                 SchemaVersion = 26
             };
@@ -185,7 +183,8 @@ namespace TestHasher
             Console.WriteLine("realm status : " + realm.IsClosed + " " + realm.IsFrozen + " " + realm.Schema + "\n");
 
             var test = realm.All<BeatmapSetInfo>();
-            var already_exported = ReadDirectoryFiles("E:\\osu songs");
+            var already_exported = ReadDirectoryFiles(output);
+#pragma warning disable CS8604 // Possible null reference argument.
             LimitedBeatmapInfo[] to_export = test.ToList().Select(
                 v => new LimitedBeatmapInfo(
                     v.Metadata.Title, 
@@ -194,7 +193,8 @@ namespace TestHasher
                     v.OnlineID))
                 .Where(v=>!already_exported.Contains(v.Id.ToString()))
             .ToArray();
-            ExportAudios("E:\\Program files (emergency)\\osu!lazer\\files", "E:\\osu songs", to_export);
+#pragma warning restore CS8604 // Possible null reference argument.
+            ExportAudios(osu_file_dir, output, to_export, max_dir_content);
         }
     }
 }
